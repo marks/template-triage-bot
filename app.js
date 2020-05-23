@@ -32,6 +32,7 @@ const app = new App({
   clientSecret: process.env.SLACK_CLIENT_SECRET,
   stateSecret: randomStringGenerator(),
   scopes: process.env.SLACK_BOT_SCOPES,
+  processBeforeResponse: true,
   installerOptions: {
     authVersion: 'v2',
     installPath: '/slack/install',
