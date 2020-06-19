@@ -27,7 +27,7 @@ In your preferred web browser:
       - Choose a descriptive name and description for your shortcut, for example:
         - Name: Show triage stats
         - Description: Calculate stats for a triage channel
-      - For the Callback ID, it is important you set it to `triage_stats`
+      - For the Callback ID, it is important you set it to `channel_stats`
     - Enter your Select Menus Options Load URL `https://your-host/slack/events`
 
 

@@ -72,7 +72,7 @@ const app = new App({
 // =========================================================================
 
 // Handle the shortcut we configured in the Slack App Config
-app.shortcut('triage_stats', async ({ ack, context, body }) => {
+app.shortcut('channel_stats', async ({ ack, context, body }) => {
   // Acknowledge right away
   await ack()
 
