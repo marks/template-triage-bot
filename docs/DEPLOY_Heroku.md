@@ -32,7 +32,7 @@ In a new tab, do the following. Be sure to replace `awesome-app-name-you-entered
       - Choose a descriptive name and description for your shortcut, for example:
         - Name: Show triage stats
         - Description: Calculate stats for a triage channel
-      - For the Callback ID, it is important you set it to `triage_stats`
+      - For the Callback ID, it is important you set it to `channel_stats`
     - Enter your Select Menus Options Load URL `https://awesome-app-name-you-entered.herokuapp.com/slack/events`
     - Click Save Changes
 

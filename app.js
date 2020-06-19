@@ -84,7 +84,7 @@ app.shortcut('channel_stats', async ({ ack, context, body }) => {
   })
 })
 
-// Handle `view_submision` of modal we opened as a result of the `triage_stats` shortcut
+// Handle `view_submision` of modal we opened as a result of the `channel_stats` shortcut
 app.view('channel_selected', async ({ body, view, ack, client, logger, context }) => {
   // Acknowledge right away
   await ack()
