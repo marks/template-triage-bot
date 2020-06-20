@@ -179,7 +179,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     // Try to parse our object to CSV and upload it as an attachment
     try {
       // Convert object to CSV
-      const csvString = messagesToCsv(allMessagesEnriched)
+      const csvString = messagesToCsv(allMessagesEnriched, statsType)
 
       // Upload CSV File
       await client.files.upload({

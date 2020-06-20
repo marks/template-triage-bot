@@ -51,7 +51,7 @@ const getAllMessagesForPastHours = async function (channelId, nHoursToGoBack, cl
   return allMessages
 }
 
-const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, statsType = 'triage') {
+const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, statsType) {
   // First, filter out messages from the team's bot
   const filteredMessages = messages.filter(m => {
     if (m.bot_id !== teamBotId) return true
@@ -84,8 +84,8 @@ const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, stat
       }
     }
 
-    // Do additional status and level analysis for triage stats requests
     if (statsType === 'triage') {
+      // Do additional status and level analysis for triage stats requests
       // Add array attributes we will populate later
       message._statuses = []
       message._levels = []
@@ -105,13 +105,16 @@ const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, stat
           message._statuses.push(status)
         }
       })
+    } else if (statsType === 'generic') {
+      // If generic analysis, let's dive deeper into the count of each emoji
+      // nothing currently added for generic analysis
     }
   })
 
   return enrichedMessages
 }
 
-const messagesToCsv = function (messages, statsType = 'triage') {
+const messagesToCsv = function (messages, statsType) {
   try {
     // Create CSV header row
     const csvFields = [
@@ -124,6 +127,7 @@ const messagesToCsv = function (messages, statsType = 'triage') {
       'text',
       'blocks',
       'attachments',
+      'reactions',
       '_postedByWorkflowBuilder',
       '_statsType',
       '_all_reactions',
