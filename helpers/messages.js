@@ -51,7 +51,7 @@ const getAllMessagesForPastHours = async function (channelId, nHoursToGoBack, cl
   return allMessages
 }
 
-const filterAndEnrichMessages = function (messages, fromChannel, teamBotId) {
+const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, statsType) {
   // First, filter out messages from the team's bot
   const filteredMessages = messages.filter(m => {
     if (m.bot_id !== teamBotId) return true
