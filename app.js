@@ -92,7 +92,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
   const submittedByUserId = body.user.id
   const selectedChannelId =
     view.state.values.channel.channel.selected_conversation
-    const nHoursToGoBack =
+  const nHoursToGoBack =
     parseInt(view.state.values.n_hours.n_hours.selected_option.value) || 7
   const statsType =
     view.state.values.stats_type.stats_type.selected_option.value
@@ -123,7 +123,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
       text: `A number for you while you wait.. <#${selectedChannelId}> has ${conversationInfo.channel.num_members} members (including apps) currently`
     })
 
-    // Get all messages for the time period specified 
+    // Get all messages for the time period specified
     const allMessages = await getAllMessagesForPastHours(
       selectedChannelId,
       nHoursToGoBack,
