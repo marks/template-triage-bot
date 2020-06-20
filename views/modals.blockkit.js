@@ -22,7 +22,7 @@ module.exports = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: ':wave: Please select a channel to retrieve triage stats for.'
+          text: ':wave: Please select a channel to retrieve stats for.'
         }
       },
       {
