@@ -80,7 +80,7 @@ app.shortcut('channel_stats', async ({ ack, context, body }) => {
   await app.client.views.open({
     token: context.botToken,
     trigger_id: body.trigger_id,
-    view: modalViews.select_triage_channel
+    view: modalViews.select_channel_and_config
   })
 })
 

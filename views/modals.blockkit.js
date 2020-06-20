@@ -1,10 +1,9 @@
 module.exports = {
-  select_triage_channel: {
+  select_channel_and_config: {
     callback_id: 'channel_selected',
-    type: 'modal',
     title: {
       type: 'plain_text',
-      text: 'Triage stats',
+      text: 'Channel Stats',
       emoji: true
     },
     submit: {
@@ -12,6 +11,7 @@ module.exports = {
       text: 'Submit',
       emoji: true
     },
+    type: 'modal',
     close: {
       type: 'plain_text',
       text: 'Cancel',
@@ -22,8 +22,7 @@ module.exports = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text:
-            ':wave: Please select a channel to retrieve triage stats for.\n\n:warning: Note that a bot :robot_face: will be added to the selected public channel.'
+          text: ':wave: Please select a channel to retrieve triage stats for.'
         }
       },
       {
@@ -32,6 +31,11 @@ module.exports = {
       {
         block_id: 'channel',
         type: 'input',
+        label: {
+          type: 'plain_text',
+          text: 'Select a channel',
+          emoji: true
+        },
         element: {
           action_id: 'channel',
           type: 'conversations_select',
@@ -42,18 +46,29 @@ module.exports = {
           },
           default_to_current_conversation: true,
           filter: {
-            include: ['public']
+            include: [
+              'public'
+            ]
           }
-        },
-        label: {
-          type: 'plain_text',
-          text: 'Select a channel',
-          emoji: true
         }
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: 'A bot :robot_face: will be added to the channel'
+          }
+        ]
       },
       {
         block_id: 'n_hours',
         type: 'input',
+        label: {
+          type: 'plain_text',
+          text: 'How far back should we look?',
+          emoji: true
+        },
         element: {
           action_id: 'n_hours',
           type: 'static_select',
@@ -69,7 +84,6 @@ module.exports = {
               text: '7 days'
             }
           },
-
           options: [
             {
               value: '12',
@@ -107,11 +121,41 @@ module.exports = {
               }
             }
           ]
-        },
+        }
+      },
+      {
+        block_id: 'stats_type',
+        type: 'input',
         label: {
           type: 'plain_text',
-          text: ':1234: How far should we look back?',
-          emoji: true
+          text: 'What type of stats would you like to generate?'
+        },
+        element: {
+          action_id: 'stats_type',
+          type: 'static_select',
+          initial_option: {
+            value: 'triage',
+            text: {
+              type: 'plain_text',
+              text: 'Triage stats (look for specific emojis)'
+            }
+          },
+          options: [
+            {
+              value: 'triage',
+              text: {
+                type: 'plain_text',
+                text: 'Triage stats (look for specific emojis)'
+              }
+            },
+            {
+              value: 'generic',
+              text: {
+                type: 'plain_text',
+                text: 'Generic stats'
+              }
+            }
+          ]
         }
       }
     ]
