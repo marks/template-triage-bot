@@ -137,7 +137,7 @@ module.exports = {
             value: 'triage',
             text: {
               type: 'plain_text',
-              text: 'Triage stats (look for specific emojis)'
+              text: 'Triage (report on specific emojis)'
             }
           },
           options: [
@@ -145,14 +145,14 @@ module.exports = {
               value: 'triage',
               text: {
                 type: 'plain_text',
-                text: 'Triage stats (look for specific emojis)'
+                text: 'Triage (report on specific emojis)'
               }
             },
             {
               value: 'generic',
               text: {
                 type: 'plain_text',
-                text: 'Generic stats'
+                text: 'Generic (report on all emoji reactions)'
               }
             }
           ]

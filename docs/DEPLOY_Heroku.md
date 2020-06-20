@@ -30,7 +30,7 @@ In a new tab, do the following. Be sure to replace `awesome-app-name-you-entered
     - Create a new Shortcut
       - Select **Global** shortcut
       - Choose a descriptive name and description for your shortcut, for example:
-        - Name: Show triage stats
+        - Name: Show channel stats
         - Description: Calculate stats for a triage channel
       - For the Callback ID, it is important you set it to `channel_stats`
     - Enter your Select Menus Options Load URL `https://awesome-app-name-you-entered.herokuapp.com/slack/events`
@@ -76,7 +76,7 @@ In a new tab, do the following. Be sure to replace `awesome-app-name-you-entered
 
 2. Try out your freshly deployed app!
     1. Visit your app's App Home tab to see the current configuration (you can edit `config.js` and restart the application to make changes)
-    2. Execute your shortcut by entering "Show triage stats" in the quick switcher (CMD+k) or by using the lightning bolt ⚡️ symbol right below the message input field in Slack and filling out the form. You should receive a DM from the bot.
+    2. Execute your shortcut by entering "Show channel stats" in the quick switcher (CMD+k) or by using the lightning bolt ⚡️ symbol right below the message input field in Slack and filling out the form. You should receive a DM from the bot.
     3. Wait for the (by default) top-of-the-hour hourly update in any channel the bot has been invited to.
 
 3. Take a moment to check out your Heroku addon.
