@@ -52,7 +52,7 @@ const app = new App({
       let teamData = installation.team
       teamData = Object.assign(teamData, installation)
       delete teamData.team // we already have this information from the assign above
-      delete teamData.user.token // we dont want a user token, if the scopes are requested
+      delete teamData.user.token // we don't want a user token, if the scopes are requested
 
       // Do an upsert so that we always have just one document per team ID
       await AuthedTeam.findOneAndUpdate({ id: teamData.id }, teamData, { upsert: true })
@@ -98,7 +98,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     view.state.values.stats_type.stats_type.selected_option.value
 
   try {
-    // Get converstion info; this will throw an error if the bot does not have access to it
+    // Get conversation info; this will throw an error if the bot does not have access to it
     const conversationInfo = await client.conversations.info({
       channel: selectedChannelId,
       include_num_members: true
@@ -174,8 +174,6 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
           }
         }].concat(levelDetailBlocks)
       })
-    } else {
-      // do generic stuff, statsType should only ever be 'generic' but its a good default/fall back too
     }
 
     // Try to parse our object to CSV and upload it as an attachment
@@ -238,7 +236,7 @@ app.event('app_home_opened', async ({ payload, context, logger }) => {
 })
 
 // Handle the shortcut for triggering manually scheduled jobs;
-// this should only be used for debugging (so we dont have to wait until a triggered job would normally fire)
+// this should only be used for debugging (so we don't have to wait until a triggered job would normally fire)
 app.shortcut('debug_manually_trigger_scheduled_jobs', async ({ ack, context, body }) => {
   // Acknowledge right away
   await ack()
@@ -256,7 +254,7 @@ app.error(error => {
   // Schedule our dynamic cron jobs
   scheduleJobs()
 
-  // Actually start thhe Bolt app. Let's go!
+  // Actually start the Bolt app. Let's go!
   await app.start(process.env.PORT || 3000)
   console.log('⚡️ Bolt app is running!')
 })()
