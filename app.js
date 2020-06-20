@@ -186,7 +186,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
         channels: msgWorkingOnIt.channel,
         content: csvString,
         title: `All messages from the past ${nHoursToGoBack} hours`,
-        filename: 'allMessages.csv',
+        filename: `${selectedChannelId}_last${nHoursToGoBack}hours_allMessages_${statsType}.csv`,
         filetype: 'csv',
         thread_ts: msgWorkingOnIt.ts
       })
