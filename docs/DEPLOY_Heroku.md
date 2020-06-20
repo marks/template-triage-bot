@@ -83,5 +83,5 @@ In a new tab, do the following. Be sure to replace `awesome-app-name-you-entered
     - You should see that MongoLabs has some data in it
     - Consider adding other addons to help you manage your app such as Logentries for ingesting your logs and NewRelic for monitoring performance characteristics.
 
-4. Lastly, note that in the default configuration of this app, you should have one and only one web dyno running at a time as the scheduled reminder functionality runs _within_ the web application code courtesy of `node-cron`.
+4. Lastly, note that in the default configuration of this app, you should have one and only one web dyno running at a time as the scheduled job functionality runs _within_ the web application code courtesy of `node-cron`.
     - In production, you may want to disable this and outsource the scheduling to [Heroku Scheduler](https://devcenter.heroku.com/articles/scheduler) or another service/add-on.

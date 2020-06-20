@@ -18,7 +18,7 @@ const triageConfig = require('./config')
 const modalViews = require('./views/modals.blockkit')
 const appHomeView = require('./views/app_home.blockkit')
 const { getAllMessagesForPastHours, filterAndEnrichMessages, messagesToCsv } = require('./helpers/messages')
-const { scheduleReminders, manuallyTriggerScheduledJobs } = require('./helpers/scheduled_jobs')
+const { scheduleJobs, manuallyTriggerScheduledJobs } = require('./helpers/scheduled_jobs')
 
 // ====================================
 // === Initialization/Configuration ===
@@ -174,6 +174,8 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
           }
         }].concat(levelDetailBlocks)
       })
+    } else {
+      // do generic stuff, statsType should only ever be 'generic' but its a good default/fall back too
     }
 
     // Try to parse our object to CSV and upload it as an attachment
@@ -252,7 +254,7 @@ app.error(error => {
 
 (async () => {
   // Schedule our dynamic cron jobs
-  scheduleReminders()
+  scheduleJobs()
 
   // Actually start thhe Bolt app. Let's go!
   await app.start(process.env.PORT || 3000)

@@ -97,5 +97,5 @@ Back in your preferred web browser...
     2. Execute your shortcut by entering "Show triage stats" in the quick switcher (CMD+k) or by using the lightning bolt ⚡️ symbol right below the message input field in Slack and filling out the form. You should receive a DM from the bot.
     3. Wait for the (by default) top-of-the-hour hourly update in any channel the bot has been invited to.
 
-3. Lastly, note that in the default configuration of this app, you should have one and only one Node process running at a time as the scheduled reminder functionality runs _within_ the web application code courtesy of `node-cron`.
+3. Lastly, note that in the default configuration of this app, you should have one and only one Node process running at a time as the scheduled job functionality runs _within_ the web application code courtesy of `node-cron`.
     - In production, you may want to disable this and outsource the scheduling to `crontab` or another schedule service/daemon.

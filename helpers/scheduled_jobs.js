@@ -123,11 +123,11 @@ const onCronTick = async function (reminderConfig) {
 }
 
 // This exported function is loaded and executed toward the bottom of app.js
-// when run, this function looks at all defined scheduled_reminders in the config js file
+// when run, this function looks at all defined scheduled_jobs in the config js file
 // and schedules them! Upon triggering (handled by the node-cron)
-const scheduleReminders = function () {
-  // get the scheduled_reminders array from the config file
-  const scheduledReminders = triageConfig.scheduled_reminders
+const scheduleJobs = function () {
+  // get the scheduled_jobs array from the config file
+  const scheduledReminders = triageConfig.scheduled_jobs
   // check to make sure it is neither undefined nor blank
   if (typeof (scheduledReminders) !== 'undefined' && scheduledReminders.length > 0) {
     // For each reminder, schedule it based off of the expression value
@@ -139,19 +139,19 @@ const scheduleReminders = function () {
     })
   } else {
     console.error('Sorry but there are no scheduled reminders to schedule.')
-    console.error('Please add some to config_triage.js and restart yoru app')
+    console.error('Please add some to config_triage.js and restart your app')
   }
 }
 
 const manuallyTriggerScheduledJobs = function () {
   console.debug('Manually triggering scheduled jobs')
-  triageConfig.scheduled_reminders.forEach(reminderConfig => {
-    onCronTick(reminderConfig)
+  triageConfig.scheduled_jobs.forEach(jobConfig => {
+    onCronTick(jobConfig)
   })
 }
 
 module.exports = {
-  scheduleReminders,
+  scheduleJobs,
   onCronTick,
   manuallyTriggerScheduledJobs
 }

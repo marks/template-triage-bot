@@ -1,5 +1,6 @@
 // External dependencies
-// Crontstrue will help us convert cron expressions to human readable language
+// Cronstrue will help us convert cron expressions to human readable language
+
 const cronstrue = require('cronstrue')
 
 module.exports = function (userId, triageConfig) {
@@ -22,19 +23,19 @@ module.exports = function (userId, triageConfig) {
     })
     .join('\n')
 
-  const scheduledJobsDisplay = triageConfig.scheduled_reminders
-    .map(reminderConfig => {
-      const scheduleString = cronstrue.toString(reminderConfig.expression)
-      const levelEmojis = reminderConfig.report_on_levels.map(
+  const scheduledJobsDisplay = triageConfig.scheduled_jobs
+    .map(jobConfig => {
+      const scheduleString = cronstrue.toString(jobConfig.expression)
+      const levelEmojis = jobConfig.report_on_levels.map(
         l => triageConfig._.levelToEmoji[l]
       )
-      const statusEmojis = reminderConfig.report_on_does_not_have_status.map(
+      const statusEmojis = jobConfig.report_on_does_not_have_status.map(
         s => triageConfig._.statusToEmoji[s]
       )
       return `${indentationUsingWhitespaceHack.repeat(
         2
       )} ${scheduleString}, look for messages from the past ${
-        reminderConfig.hours_to_look_back
+        jobConfig.hours_to_look_back
       } hours.. \n\t\t\tthat contain any of the following emoji: ${levelEmojis.join(
         ' / '
       )}\n\t\t\tand do not have any of the following reactions: ${statusEmojis.join(
@@ -63,7 +64,7 @@ module.exports = function (userId, triageConfig) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `${newLineInSectionBlockHack}:question: *What is this?* :question:\n\nThis is the App Home for me, Triage Bot. I have two main jobs around here:\n\n:one: You can invite me to public channels and I will monitor for and remind the channel about messages that fit the criteria below (see _Scheduled Reminders_).\n\n:two: You can use my message shortcut :zap: to create ad-hoc reports on any public channel. I'll give you top-line stats and provide a CSV for offline analysis too.${newLineInSectionBlockHack.repeat(
+          text: `${newLineInSectionBlockHack}:question: *What is this?* :question:\n\nThis is the App Home for me, Triage Bot. I have two main jobs around here:\n\n:one: You can invite me to public channels and I will monitor for and remind the channel about messages that fit the criteria below (see _Scheduled Jobs_).\n\n:two: You can use my message shortcut :zap: to create ad-hoc reports on any public channel. I'll give you top-line stats and provide a CSV for offline analysis too.${newLineInSectionBlockHack.repeat(
             2
           )}`
         }
@@ -107,7 +108,7 @@ module.exports = function (userId, triageConfig) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `_Scheduled Reminders_\n\n${scheduledJobsDisplay}`
+          text: `_Scheduled Jobs_\n\n${scheduledJobsDisplay}`
         }
       },
       {
