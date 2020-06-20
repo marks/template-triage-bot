@@ -92,8 +92,10 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
   const submittedByUserId = body.user.id
   const selectedChannelId =
     view.state.values.channel.channel.selected_conversation
-  const nHoursToGoBack =
+    const nHoursToGoBack =
     parseInt(view.state.values.n_hours.n_hours.selected_option.value) || 7
+  const statsType =
+    view.state.values.stats_type.stats_type.selected_option.value
 
   try {
     // Get converstion info; this will throw an error if the bot does not have access to it
@@ -110,7 +112,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     // Let the user know, in a DM from the bot, that we're working on their request
     const msgWorkingOnIt = await client.chat.postMessage({
       channel: submittedByUserId,
-      text: `*You asked for triage stats for <#${selectedChannelId}>*.\n` +
+      text: `*You asked for _${statsType} stats_ for <#${selectedChannelId}>*.\n` +
         `I'll work on the stats for the past ${nHoursToGoBack} hours right away!`
     })
 
@@ -118,10 +120,10 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     await client.chat.postMessage({
       channel: msgWorkingOnIt.channel,
       thread_ts: msgWorkingOnIt.ts,
-      text: `A number for you while you wait.. the channel has ${conversationInfo.channel.num_members} members (including apps) currently`
+      text: `A number for you while you wait.. <#${selectedChannelId}> has ${conversationInfo.channel.num_members} members (including apps) currently`
     })
 
-    // Get all messages from the beginning of time (probably not a good idea)
+    // Get all messages for the time period specified 
     const allMessages = await getAllMessagesForPastHours(
       selectedChannelId,
       nHoursToGoBack,
