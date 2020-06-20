@@ -131,48 +131,50 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     )
 
     // Use a helper method to enrich the messages we have
-    const allMessagesEnriched = filterAndEnrichMessages(allMessages, selectedChannelId, context.botId)
+    const allMessagesEnriched = filterAndEnrichMessages(allMessages, selectedChannelId, context.botId, statsType)
 
-    // For each level, let's do some analysis!
-    const levelDetailBlocks = []
-    for (const i in triageConfig._.levels) {
-      const level = triageConfig._.levels[i]
-      const allMessagesForLevel = allMessagesEnriched.filter(
-        m => m[`_level_${level}`] === true
-      )
-
-      // Formulate strings for each status
-      const countsStrings = triageConfig._.statuses.map(status => {
-        const messagesForLevelAndStatus = allMessagesForLevel.filter(
-          m => m[`_status_${status}`] === true
+    if (statsType === 'triage') {
+      // For each level, let's do some analysis!
+      const levelDetailBlocks = []
+      for (const i in triageConfig._.levels) {
+        const level = triageConfig._.levels[i]
+        const allMessagesForLevel = allMessagesEnriched.filter(
+          m => m[`_level_${level}`] === true
         )
-        return `\tMessages ${status} ${triageConfig._.statusToEmoji[status]}: ${messagesForLevelAndStatus.length}`
-      })
 
-      // Add level block to array
-      levelDetailBlocks.push(
-        {
+        // Formulate strings for each status
+        const countsStrings = triageConfig._.statuses.map(status => {
+          const messagesForLevelAndStatus = allMessagesForLevel.filter(
+            m => m[`_status_${status}`] === true
+          )
+          return `\tMessages ${status} ${triageConfig._.statusToEmoji[status]}: ${messagesForLevelAndStatus.length}`
+        })
+
+        // Add level block to array
+        levelDetailBlocks.push(
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `${triageConfig._.levelToEmoji[level]} *${level}* (${allMessagesForLevel.length} total)\n${countsStrings.join('\n')}`
+            }
+          }
+        )
+      }
+
+      // Send a single message to the thread with all of the stats by level
+      await client.chat.postMessage({
+        channel: msgWorkingOnIt.channel,
+        thread_ts: msgWorkingOnIt.ts,
+        blocks: [{
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${triageConfig._.levelToEmoji[level]} *${level}* (${allMessagesForLevel.length} total)\n${countsStrings.join('\n')}`
+            text: "Here's a summary of the messages needing attention by urgency level and status:"
           }
-        }
-      )
+        }].concat(levelDetailBlocks)
+      })
     }
-
-    // Send a single message to the thread with all of the stats by level
-    await client.chat.postMessage({
-      channel: msgWorkingOnIt.channel,
-      thread_ts: msgWorkingOnIt.ts,
-      blocks: [{
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: "Here's a summary of the messages needing attention by urgency level and status:"
-        }
-      }].concat(levelDetailBlocks)
-    })
 
     // Try to parse our object to CSV and upload it as an attachment
     try {
