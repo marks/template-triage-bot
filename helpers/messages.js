@@ -62,10 +62,9 @@ const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, stat
 
   // Loop through all messages and enrich them additional attributes so we can do filters on them later
   enrichedMessages.forEach(message => {
-    // Regardless of statsType, we want to populate the channel ID, _statsType, and array of _reactions
+    // Regardless of statsType, we want to populate a few key/values
     // Add `channel` attribute with the channel we retrieved the message from
     message.channel = fromChannel
-    message._statsType = statsType
 
     // Create a new `_all_reactions` attribute with an array of all reactions (regardless of if they are relevant to triage analysis)
     message._all_reactions = message.reactions
@@ -133,7 +132,6 @@ const messagesToCsv = function (messages, statsType) {
       'attachments',
       'reactions',
       '_postedByWorkflowBuilder',
-      '_statsType',
       '_all_reactions',
       '_threadedReplyCount',
       '_threadedReplyUsersCount'
