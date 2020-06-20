@@ -139,12 +139,12 @@ const messagesToCsv = function (messages, statsType) {
 
     // add specific columns related to triage stats if relevant
     if (statsType === 'triage') {
-      csvFields.push('_levels', '_levels')
+      csvFields.push('_levels', '_stats')
 
       const statusFields = triageConfig._.statuses.map(s => `_status_${s}`)
       const levelFields = triageConfig._.levels.map(l => `_level_${l}`)
 
-      csvFields.concat(levelFields, statusFields)
+      csvFields.push(...levelFields, ...statusFields)
     } else if (statsType === 'generic') {
       // Get a unique list of `nUsersReactedWith_` keys so we can use them as columns in the csv
       const allReactionKeys = new Set()
@@ -153,9 +153,11 @@ const messagesToCsv = function (messages, statsType) {
           .filter((k) => k.includes('nUsersReactedWith_'))
           .forEach((k) => allReactionKeys.add(k))
       })
-      csvFields.concat(Array.from(allReactionKeys))
+      console.log(allReactionKeys)
+      csvFields.push(...Array.from(allReactionKeys))
     }
 
+    console.log(csvFields)
     const csvOpts = { fields: csvFields }
     const csvString = parseJsonToCsv(messages, csvOpts)
     return csvString
