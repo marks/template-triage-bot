@@ -108,6 +108,10 @@ const filterAndEnrichMessages = function (messages, fromChannel, teamBotId, stat
     } else if (statsType === 'generic') {
       // If generic analysis, let's dive deeper into the count of each emoji
       // nothing currently added for generic analysis
+      message.reactions.forEach((reaction) => {
+        const key = `_nUsersReactedWith_${reaction.name}`
+        message[key] = reaction.count
+      })
     }
   })
 
@@ -137,11 +141,21 @@ const messagesToCsv = function (messages, statsType) {
 
     // add specific columns related to triage stats if relevant
     if (statsType === 'triage') {
-      csvFields.push('_levels')
-      csvFields.push('_statuses')
+      csvFields.push('_levels', '_levels')
+
       const statusFields = triageConfig._.statuses.map(s => `_status_${s}`)
       const levelFields = triageConfig._.levels.map(l => `_level_${l}`)
+
       csvFields.concat(levelFields, statusFields)
+    } else if (statsType === 'generic') {
+      // Get a unique list of `nUsersReactedWith_` keys so we can use them as columns in the csv
+      const allReactionKeys = new Set()
+      messages.forEach((m) => {
+        Object.keys(m)
+          .filter((k) => k.includes('nUsersReactedWith_'))
+          .forEach((k) => allReactionKeys.add(k))
+      })
+      csvFields.concat(Array.from(allReactionKeys))
     }
 
     const csvOpts = { fields: csvFields }
