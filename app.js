@@ -18,7 +18,7 @@ const triageConfig = require('./config')
 const modalViews = require('./views/modals.blockkit')
 const appHomeView = require('./views/app_home.blockkit')
 const { getAllMessagesForPastHours, filterAndEnrichMessages, messagesToCsv } = require('./helpers/messages')
-const { scheduleReminders, manuallyTriggerScheduledJobs } = require('./helpers/scheduled_jobs')
+const { scheduleJobs, manuallyTriggerScheduledJobs } = require('./helpers/scheduled_jobs')
 
 // ====================================
 // === Initialization/Configuration ===
@@ -52,7 +52,7 @@ const app = new App({
       let teamData = installation.team
       teamData = Object.assign(teamData, installation)
       delete teamData.team // we already have this information from the assign above
-      delete teamData.user.token // we dont want a user token, if the scopes are requested
+      delete teamData.user.token // we don't want a user token, if the scopes are requested
 
       // Do an upsert so that we always have just one document per team ID
       await AuthedTeam.findOneAndUpdate({ id: teamData.id }, teamData, { upsert: true })
@@ -72,7 +72,7 @@ const app = new App({
 // =========================================================================
 
 // Handle the shortcut we configured in the Slack App Config
-app.shortcut('triage_stats', async ({ ack, context, body }) => {
+app.shortcut('channel_stats', async ({ ack, context, body }) => {
   // Acknowledge right away
   await ack()
 
@@ -80,11 +80,11 @@ app.shortcut('triage_stats', async ({ ack, context, body }) => {
   await app.client.views.open({
     token: context.botToken,
     trigger_id: body.trigger_id,
-    view: modalViews.select_triage_channel
+    view: modalViews.select_channel_and_config
   })
 })
 
-// Handle `view_submision` of modal we opened as a result of the `triage_stats` shortcut
+// Handle `view_submision` of modal we opened as a result of the `channel_stats` shortcut
 app.view('channel_selected', async ({ body, view, ack, client, logger, context }) => {
   // Acknowledge right away
   await ack()
@@ -94,9 +94,11 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     view.state.values.channel.channel.selected_conversation
   const nHoursToGoBack =
     parseInt(view.state.values.n_hours.n_hours.selected_option.value) || 7
+  const statsType =
+    view.state.values.stats_type.stats_type.selected_option.value
 
   try {
-    // Get converstion info; this will throw an error if the bot does not have access to it
+    // Get conversation info; this will throw an error if the bot does not have access to it
     const conversationInfo = await client.conversations.info({
       channel: selectedChannelId,
       include_num_members: true
@@ -110,7 +112,7 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     // Let the user know, in a DM from the bot, that we're working on their request
     const msgWorkingOnIt = await client.chat.postMessage({
       channel: submittedByUserId,
-      text: `*You asked for triage stats for <#${selectedChannelId}>*.\n` +
+      text: `*You asked for _${statsType} stats_ for <#${selectedChannelId}>*.\n` +
         `I'll work on the stats for the past ${nHoursToGoBack} hours right away!`
     })
 
@@ -118,10 +120,10 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     await client.chat.postMessage({
       channel: msgWorkingOnIt.channel,
       thread_ts: msgWorkingOnIt.ts,
-      text: `A number for you while you wait.. the channel has ${conversationInfo.channel.num_members} members (including apps) currently`
+      text: `A number for you while you wait.. <#${selectedChannelId}> has ${conversationInfo.channel.num_members} members (including apps) currently`
     })
 
-    // Get all messages from the beginning of time (probably not a good idea)
+    // Get all messages for the time period specified
     const allMessages = await getAllMessagesForPastHours(
       selectedChannelId,
       nHoursToGoBack,
@@ -129,60 +131,62 @@ app.view('channel_selected', async ({ body, view, ack, client, logger, context }
     )
 
     // Use a helper method to enrich the messages we have
-    const allMessagesEnriched = filterAndEnrichMessages(allMessages, selectedChannelId, context.botId)
+    const allMessagesEnriched = filterAndEnrichMessages(allMessages, selectedChannelId, context.botId, statsType)
 
-    // For each level, let's do some analysis!
-    const levelDetailBlocks = []
-    for (const i in triageConfig._.levels) {
-      const level = triageConfig._.levels[i]
-      const allMessagesForLevel = allMessagesEnriched.filter(
-        m => m[`_level_${level}`] === true
-      )
-
-      // Formulate strings for each status
-      const countsStrings = triageConfig._.statuses.map(status => {
-        const messagesForLevelAndStatus = allMessagesForLevel.filter(
-          m => m[`_status_${status}`] === true
+    if (statsType === 'triage') {
+      // For each level, let's do some analysis!
+      const levelDetailBlocks = []
+      for (const i in triageConfig._.levels) {
+        const level = triageConfig._.levels[i]
+        const allMessagesForLevel = allMessagesEnriched.filter(
+          m => m[`_level_${level}`] === true
         )
-        return `\tMessages ${status} ${triageConfig._.statusToEmoji[status]}: ${messagesForLevelAndStatus.length}`
-      })
 
-      // Add level block to array
-      levelDetailBlocks.push(
-        {
+        // Formulate strings for each status
+        const countsStrings = triageConfig._.statuses.map(status => {
+          const messagesForLevelAndStatus = allMessagesForLevel.filter(
+            m => m[`_status_${status}`] === true
+          )
+          return `\tMessages ${status} ${triageConfig._.statusToEmoji[status]}: ${messagesForLevelAndStatus.length}`
+        })
+
+        // Add level block to array
+        levelDetailBlocks.push(
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `${triageConfig._.levelToEmoji[level]} *${level}* (${allMessagesForLevel.length} total)\n${countsStrings.join('\n')}`
+            }
+          }
+        )
+      }
+
+      // Send a single message to the thread with all of the stats by level
+      await client.chat.postMessage({
+        channel: msgWorkingOnIt.channel,
+        thread_ts: msgWorkingOnIt.ts,
+        blocks: [{
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${triageConfig._.levelToEmoji[level]} *${level}* (${allMessagesForLevel.length} total)\n${countsStrings.join('\n')}`
+            text: "Here's a summary of the messages needing attention by urgency level and status:"
           }
-        }
-      )
+        }].concat(levelDetailBlocks)
+      })
     }
-
-    // Send a single message to the thread with all of the stats by level
-    await client.chat.postMessage({
-      channel: msgWorkingOnIt.channel,
-      thread_ts: msgWorkingOnIt.ts,
-      blocks: [{
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: "Here's a summary of the messages needing attention by urgency level and status:"
-        }
-      }].concat(levelDetailBlocks)
-    })
 
     // Try to parse our object to CSV and upload it as an attachment
     try {
       // Convert object to CSV
-      const csvString = messagesToCsv(allMessagesEnriched)
+      const csvString = messagesToCsv(allMessagesEnriched, statsType)
 
       // Upload CSV File
       await client.files.upload({
         channels: msgWorkingOnIt.channel,
         content: csvString,
         title: `All messages from the past ${nHoursToGoBack} hours`,
-        filename: 'allMessages.csv',
+        filename: `${selectedChannelId}_last${nHoursToGoBack}hours_allMessages_${statsType}.csv`,
         filetype: 'csv',
         thread_ts: msgWorkingOnIt.ts
       })
@@ -232,7 +236,7 @@ app.event('app_home_opened', async ({ payload, context, logger }) => {
 })
 
 // Handle the shortcut for triggering manually scheduled jobs;
-// this should only be used for debugging (so we dont have to wait until a triggered job would normally fire)
+// this should only be used for debugging (so we don't have to wait until a triggered job would normally fire)
 app.shortcut('debug_manually_trigger_scheduled_jobs', async ({ ack, context, body }) => {
   // Acknowledge right away
   await ack()
@@ -248,9 +252,9 @@ app.error(error => {
 
 (async () => {
   // Schedule our dynamic cron jobs
-  scheduleReminders()
+  scheduleJobs()
 
-  // Actually start thhe Bolt app. Let's go!
+  // Actually start the Bolt app. Let's go!
   await app.start(process.env.PORT || 3000)
   console.log('⚡️ Bolt app is running!')
 })()

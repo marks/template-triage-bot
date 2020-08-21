@@ -14,10 +14,10 @@ const { getAllMessagesForPastHours, filterAndEnrichMessages } = require('./messa
 // Initialize a single instance of Slack Web API WebClient, without a token
 const client = new WebClient()
 
-const onCronTick = async function (reminderConfig) {
+const onCronTick = async function (jobConfig) {
   const now = new Date()
   console.log('[node-cron] [onCronTick] ran ' + now.toLocaleString())
-  console.log('Reminder config is as follows', reminderConfig)
+  console.log('Job config is as follows', jobConfig)
 
   // Get all teams
   const teams = await AuthedTeam.find({})
@@ -48,25 +48,26 @@ const onCronTick = async function (reminderConfig) {
         // Get all messages from the beginning of time (probably not a good idea)
         const allMessages = await getAllMessagesForPastHours(
           channel.id,
-          reminderConfig.hours_to_look_back,
+          jobConfig.hours_to_look_back,
           client
         )
 
         console.log(
-          `\tFound ${allMessages.length} total messages in past ${reminderConfig.hours_to_look_back} hours`
+          `\tFound ${allMessages.length} total messages in past ${jobConfig.hours_to_look_back} hours`
         )
 
-        // Use the enricMessages helper to enrich the messages we have
-        const allMessagesEnriched = filterAndEnrichMessages(allMessages, channel, team.bot.id)
+        // Use the filterAndEnrichMessages helper to enrich the messages we have
+        // and always use 'triage' stats type for scheduled jobs
+        const allMessagesEnriched = filterAndEnrichMessages(allMessages, channel, team.bot.id, 'triage')
 
         // Filter all messages to ones we care about based off of the config
         const messagesFilteredForConfig = allMessagesEnriched.filter(m => {
-          // Look to see if the levels and statuses are any of the ones we care about (per reminderConfig)
+          // Look to see if the levels and statuses are any of the ones we care about (per jobConfig)
           const containsAnySpecifiedLevels = m._levels.some(l =>
-            reminderConfig.report_on_levels.includes(l)
+            jobConfig.report_on_levels.includes(l)
           )
           const containsAnySpecifiedStatuses = m._statuses.some(s =>
-            reminderConfig.report_on_does_not_have_status.includes(s)
+            jobConfig.report_on_does_not_have_status.includes(s)
           )
 
           // Return the boolean of if they contain any of the levels and do NOT contain any of the statuses
@@ -74,21 +75,21 @@ const onCronTick = async function (reminderConfig) {
         })
 
         console.log(
-          `\t${messagesFilteredForConfig.length} messages match the reminderConfig criteria`
+          `\t${messagesFilteredForConfig.length} messages match the jobConfig criteria`
         )
 
-        const statusEmojis = reminderConfig.report_on_does_not_have_status.map(
+        const statusEmojis = jobConfig.report_on_does_not_have_status.map(
           s => triageConfig._.statusToEmoji[s]
         )
-        const levelEmojis = reminderConfig.report_on_levels.map(
+        const levelEmojis = jobConfig.report_on_levels.map(
           l => triageConfig._.levelToEmoji[l]
         )
 
         if (messagesFilteredForConfig.length === 0) {
           await client.chat.postMessage({
             channel: channel.id,
-            text: `:tada: Nice job, <#${channel.id}>!` +
-              `There are ${messagesFilteredForConfig.length} messages from the past ${reminderConfig.hours_to_look_back} hours that are ` +
+            text: `:tada: Nice job, <#${channel.id}>! ` +
+              `There are ${messagesFilteredForConfig.length} messages from the past ${jobConfig.hours_to_look_back} hours that are ` +
               `either ${levelEmojis.join(
                 '/'
               )} and don't have either ${statusEmojis.join('/')}`
@@ -104,7 +105,7 @@ const onCronTick = async function (reminderConfig) {
           await client.chat.postMessage({
             channel: channel.id,
             text: `:wave: Hi there, <#${channel.id}>. ` +
-              `${numMessagesString} from the past ${reminderConfig.hours_to_look_back} hours that are ` +
+              `${numMessagesString} from the past ${jobConfig.hours_to_look_back} hours that are ` +
               `either ${levelEmojis.join(
                 '/'
               )} and don't have either ${statusEmojis.join(
@@ -123,35 +124,35 @@ const onCronTick = async function (reminderConfig) {
 }
 
 // This exported function is loaded and executed toward the bottom of app.js
-// when run, this function looks at all defined scheduled_reminders in the config js file
+// when run, this function looks at all defined scheduled_jobs in the config js file
 // and schedules them! Upon triggering (handled by the node-cron)
-const scheduleReminders = function () {
-  // get the scheduled_reminders array from the config file
-  const scheduledReminders = triageConfig.scheduled_reminders
+const scheduleJobs = function () {
+  // get the scheduled_jobs array from the config file
+  const scheduledJobs = triageConfig.scheduled_jobs
   // check to make sure it is neither undefined nor blank
-  if (typeof (scheduledReminders) !== 'undefined' && scheduledReminders.length > 0) {
-    // For each reminder, schedule it based off of the expression value
+  if (typeof (scheduledJobs) !== 'undefined' && scheduledJobs.length > 0) {
+    // For each job, schedule it based off of the expression value
     // and send the rest of the config to the function (onCronTick) so it knows what to do
-    scheduledReminders.forEach(reminderConfig => {
-      cron.schedule(reminderConfig.expression, () => {
-        onCronTick(reminderConfig)
+    scheduledJobs.forEach(jobConfig => {
+      cron.schedule(jobConfig.expression, () => {
+        onCronTick(jobConfig)
       })
     })
   } else {
-    console.error('Sorry but there are no scheduled reminders to schedule.')
-    console.error('Please add some to config_triage.js and restart yoru app')
+    console.error('Sorry but there are no scheduled jobs to schedule.')
+    console.error('Please add some to config_triage.js and restart your app')
   }
 }
 
 const manuallyTriggerScheduledJobs = function () {
   console.debug('Manually triggering scheduled jobs')
-  triageConfig.scheduled_reminders.forEach(reminderConfig => {
-    onCronTick(reminderConfig)
+  triageConfig.scheduled_jobs.forEach(jobConfig => {
+    onCronTick(jobConfig)
   })
 }
 
 module.exports = {
-  scheduleReminders,
+  scheduleJobs,
   onCronTick,
   manuallyTriggerScheduledJobs
 }
