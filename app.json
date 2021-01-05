@@ -22,7 +22,7 @@
   "success_url": "/slack/install",
   "addons": [
     {
-      "plan": "ormongo:5-mmap",
+      "plan": "ormongo:2-wt",
       "as": "MONGODB"
     }
   ],
